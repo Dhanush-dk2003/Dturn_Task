@@ -1,9 +1,12 @@
 import { useContext } from 'react';
-import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) return <div className="text-center mt-5">Loading...</div>; // 👈 prevent early redirect
+
   return user ? children : <Navigate to="/login" />;
 };
 

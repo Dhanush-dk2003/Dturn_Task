@@ -31,7 +31,7 @@ const Sidebar = () => {
       </button>
 
       {/* Sidebar for medium and up (visible always) */}
-      <div className="d-none d-md-flex flex-column p-3 bg-light position-fixed h-100" style={{ width: '250px' }}>
+      <div className="d-none d-md-flex flex-column p-3  position-fixed h-100" style={{ width: '240px',backgroundColor:'#dddedf' }}>
         <SidebarContent handleLogout={handleLogout} user={user} />
       </div>
 
@@ -79,7 +79,7 @@ const SidebarContent = ({ handleLogout, user }) => (
         onClick={handleLogout}
         className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center"
       >
-        Logout <img src={icon} alt="Logout Icon" className="ms-2" style={{ width: '16px' }} />
+        Logout <img src={icon} alt="Logout Icon" className="ms-2" style={{ width: '16px'}} />
       </button>
     </div>
   </div>

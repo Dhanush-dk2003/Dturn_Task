@@ -116,7 +116,7 @@ const AdminDashboard = () => {
       {/* Reserve sidebar space on large screens */}
       <div className="flex-shrink-0 d-none d-md-block" style={{ width: '200px' }}></div>
 
-      <div className="flex-grow-1" style={{ marginLeft: '50px' }}>
+      <div className="flex-grow-1" style={{ marginLeft: '40px',marginRight:'10px' }}>
         <div className="container-fluid p-3" style={{ maxHeight: '100vh', overflowY: 'auto' }}>
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
             <h2 className="mb-0">Admin's Dashboard</h2>
@@ -164,13 +164,14 @@ const AdminDashboard = () => {
                             <option value="IN_PROGRESS">In Progress</option>
                             <option value="DONE">Done</option>
                           </select>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDeleteProject(project.id)}>Delete Project</button>
+                          <button className="btn btn-outline-danger btn-sm flex-shrink-0 px-3 py-2" onClick={() => handleDeleteProject(project.id)}>Delete</button>
                         </div>
                       </div>
 
                       <div className="table-responsive">
                         <table className="table table-bordered">
-                          <thead className="table-dark text-white">
+                          <thead className='table table-dark'>
+
                             <tr>
                               <th>S.No</th>
                               <th>Tasks</th>
@@ -226,7 +227,7 @@ const AdminDashboard = () => {
 
                       <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mt-3">
                         <button className="btn btn-outline-secondary" onClick={() => handleAddTaskRow(project.id)}>+ Task</button>
-                        <button className="btn btn-success" onClick={() => handleAssignTasks(project.id)}>Assign</button>
+                        <button className="btn btn-outline-success" onClick={() => handleAssignTasks(project.id)}>Assign</button>
                       </div>
                     </div>
                   </div>
