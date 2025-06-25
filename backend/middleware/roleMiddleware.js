@@ -1,0 +1,17 @@
+import logger from '../config/logger.js';
+
+export const isAdmin = (req, res, next) => {
+  if (req.user.role !== 'ADMIN') {
+    logger.warn(`Unauthorized ADMIN access by ${req.user.email}`);
+    return res.status(403).json({ message: 'Admins only' });
+  }
+  next();
+};
+
+export const isManager = (req, res, next) => {
+  if (req.user.role !== 'MANAGER') {
+    logger.warn(`Unauthorized MANAGER access by ${req.user.email}`);
+    return res.status(403).json({ message: 'Managers only' });
+  }
+  next();
+};
