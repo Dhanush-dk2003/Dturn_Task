@@ -38,3 +38,43 @@ export const createTask = async (req, res) => {
     res.status(500).json({ message: 'Something went wrong' });
   }
 };
+export const getTasksByProject = async (req, res) => {
+  try {
+    const { projectId } = req.query;
+    if (!projectId) {
+      return res.status(400).json({ message: 'Missing projectId' });
+    }
+
+    const tasks = await prisma.task.findMany({
+      where: { projectId: parseInt(projectId) },
+      include: { user: true } // So you can get user.email
+    });
+
+    res.status(200).json(tasks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch tasks' });
+  }
+};
+export const deleteTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const task = await prisma.task.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    await prisma.task.delete({
+      where: { id: parseInt(id) }
+    });
+
+    res.status(200).json({ message: 'Task deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete task' });
+  }
+};

@@ -15,3 +15,10 @@ export const isManager = (req, res, next) => {
   }
   next();
 };
+export const isUser = (req, res, next) => {
+  if (req.user.role !== 'USER') {
+    logger.warn(`Unauthorized USER access by ${req.user.email}`);
+    return res.status(403).json({ message: 'Users only' });
+  }
+  next();
+};
