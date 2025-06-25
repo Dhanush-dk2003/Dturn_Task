@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import { protect } from './middleware/authMiddleware.js';
 import { isAdmin } from './middleware/roleMiddleware.js';
 import projectRoutes from './routes/projectRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
 
 
 
@@ -23,6 +24,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes); // 👈 mount routes
 app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running');
