@@ -7,7 +7,7 @@ const AdminDashboard = () => {
   const [newProject, setNewProject] = useState('');
   const [tasksByProject, setTasksByProject] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 5;
 
@@ -16,7 +16,6 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchProjects = async () => {
-    setLoading(true);
     try {
       const res = await API.get('/projects');
       setProjects(res.data);
@@ -33,50 +32,66 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 250); // Delay to avoid flicker
     }
   };
 
   const handleCreateProject = async () => {
     if (!newProject.trim()) return;
+    setLoading(true);
     try {
       await API.post('/projects', { name: newProject });
       setNewProject('');
-      fetchProjects();
+      await fetchProjects();
     } catch (err) {
       console.error('Add project error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteProject = async (id) => {
     if (!window.confirm('Delete this project?')) return;
+    setLoading(true);
     try {
       await API.delete(`/projects/${id}`);
-      fetchProjects();
+      await fetchProjects();
     } catch (err) {
       console.error('Delete error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteTask = async (taskId) => {
     if (!window.confirm('Delete this task?')) return;
+    setLoading(true);
     try {
       await API.delete(`/tasks/${taskId}`);
-      fetchProjects();
+      await fetchProjects();
     } catch (err) {
       console.error('Task delete error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleProjectStatusChange = async (id, status) => {
-    await API.put(`/projects/${id}`, { status });
-    fetchProjects();
+    setLoading(true);
+    try {
+      await API.put(`/projects/${id}`, { status });
+      await fetchProjects();
+    } catch (err) {
+      console.error('Update status error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddTaskRow = (projectId) => {
     setTasksByProject((prev) => ({
       ...prev,
-      [projectId]: [...(prev[projectId] || []), { title: '', userEmail: '', status: 'TODO', isNew: true }]
+      [projectId]: [...(prev[projectId] || []), { id: Date.now(), title: '', userEmail: '', status: 'TODO', isNew: true }]
     }));
   };
 
@@ -87,16 +102,23 @@ const AdminDashboard = () => {
   };
 
   const handleAssignTasks = async (projectId) => {
-    const tasksToAssign = tasksByProject[projectId].filter(t => t.isNew);
-    for (const task of tasksToAssign) {
-      await API.post('/tasks', {
-        title: task.title,
-        projectName: projects.find(p => p.id === projectId).name,
-        userEmail: task.userEmail,
-        status: task.status || 'TODO'
-      });
+    setLoading(true);
+    try {
+      const tasksToAssign = tasksByProject[projectId].filter(t => t.isNew);
+      for (const task of tasksToAssign) {
+        await API.post('/tasks', {
+          title: task.title,
+          projectName: projects.find(p => p.id === projectId).name,
+          userEmail: task.userEmail,
+          status: task.status || 'TODO'
+        });
+      }
+      await fetchProjects();
+    } catch (err) {
+      console.error('Assign tasks error:', err);
+    } finally {
+      setLoading(false);
     }
-    fetchProjects();
   };
 
   const filteredProjects = projects.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -112,31 +134,26 @@ const AdminDashboard = () => {
   return (
     <div className="d-flex">
       <Sidebar />
-
-      {/* Reserve sidebar space on large screens */}
-      <div className="flex-shrink-0 d-none d-md-block" style={{ width: '200px' }}></div>
-
-      <div className="flex-grow-1" style={{ marginLeft: '40px',marginRight:'10px' }}>
-        <div className="container-fluid p-3" style={{ maxHeight: '100vh', overflowY: 'auto' }}>
+      <div className="flex-grow-1" style={{ marginLeft: '250px', padding: '20px' }}>
+        <div className="container-fluid">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
             <h2 className="mb-0">Admin's Dashboard</h2>
             <div className="d-flex flex-column flex-md-row gap-2 w-50 w-md-50">
               <input
                 type="text"
-                className="form-control flex-grow-1"
+                className="form-control"
                 placeholder="Search projects"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-
               <input
                 type="text"
-                className="form-control flex-grow-1"
+                className="form-control"
                 placeholder="New Project Name"
                 value={newProject}
-                onChange={(e) => setNewProject(e.target.value)} 
+                onChange={(e) => setNewProject(e.target.value)}
               />
-              <button className="btn btn-primary flex-shrink-0 px-3 py-2" onClick={handleCreateProject}>+ Add Project</button>
+              <button className="btn btn-primary" onClick={handleCreateProject}>+ Add Project</button>
             </div>
           </div>
 
@@ -164,14 +181,13 @@ const AdminDashboard = () => {
                             <option value="IN_PROGRESS">In Progress</option>
                             <option value="DONE">Done</option>
                           </select>
-                          <button className="btn btn-outline-danger btn-sm flex-shrink-0 px-3 py-2" onClick={() => handleDeleteProject(project.id)}>Delete</button>
+                          <button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteProject(project.id)}>Delete</button>
                         </div>
                       </div>
 
                       <div className="table-responsive">
                         <table className="table table-bordered">
-                          <thead className='table table-dark'>
-
+                          <thead className="table-dark">
                             <tr>
                               <th>S.No</th>
                               <th>Tasks</th>
@@ -182,7 +198,7 @@ const AdminDashboard = () => {
                           </thead>
                           <tbody>
                             {(tasksByProject[project.id] || []).map((task, index) => (
-                              <tr key={index}>
+                              <tr key={task.id || index}>
                                 <td>{index + 1}</td>
                                 <td>
                                   {task.isNew ? (

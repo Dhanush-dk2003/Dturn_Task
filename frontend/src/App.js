@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './pages/AdminDashboard';
+import ManagerDashboard from './pages/ManagerDashboard';
+import UserDashboard from './pages/UserDashboard';
 import { Navigate } from 'react-router-dom';
 
 function App() {
@@ -15,8 +17,10 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-        </Routes>
+          <Route path="/admindashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/managerdashboard" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
+          <Route path="/userdashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>}/>
+           </Routes>
         </AuthProvider>
       </BrowserRouter>
     

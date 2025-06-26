@@ -15,10 +15,19 @@ export const isManager = (req, res, next) => {
   }
   next();
 };
+
 export const isUser = (req, res, next) => {
   if (req.user.role !== 'USER') {
     logger.warn(`Unauthorized USER access by ${req.user.email}`);
     return res.status(403).json({ message: 'Users only' });
   }
   next();
+};
+
+export const isAdminOrManager = (req, res, next) => {
+  if (req.user.role === 'ADMIN' || req.user.role === 'MANAGER') {
+    return next();
+  }
+  logger.warn(`Unauthorized project access by ${req.user.email}`, { timestamp: new Date().toISOString() });
+  return res.status(403).json({ message: 'Access denied' });
 };

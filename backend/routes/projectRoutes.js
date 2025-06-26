@@ -1,6 +1,7 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { isAdmin, isManager } from '../middleware/roleMiddleware.js';
+import { isAdminOrManager } from '../middleware/roleMiddleware.js';
+import { isAdmin } from '../middleware/roleMiddleware.js';
 import { createProject,
   getAllProjects,
   getProjectById,
@@ -13,8 +14,8 @@ router.post('/', protect, isAdmin, createProject,  (req, res) => {
   res.status(201).json({ message: 'Project created successfully' });
 });
 
-router.get('/', protect, isAdmin, getAllProjects);
-router.get('/:id', protect, isAdmin, getProjectById);
+router.get('/', protect, isAdminOrManager, getAllProjects);
+router.get('/:id', protect, isAdminOrManager, getProjectById);
 router.put('/:id', protect, isAdmin, updateProject);
 router.delete('/:id', protect, isAdmin, deleteProject);
 
