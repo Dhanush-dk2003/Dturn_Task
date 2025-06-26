@@ -76,17 +76,22 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleProjectStatusChange = async (id, status) => {
-    setLoading(true);
-    try {
-      await API.put(`/projects/${id}`, { status });
-      await fetchProjects();
-    } catch (err) {
-      console.error('Update status error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleProjectStatusChange = async (projectId, newStatus) => {
+  try {
+    await API.put(`/projects/${projectId}`, { status: newStatus });
+
+    // Update only the changed project locally
+    setProjects(prev =>
+      prev.map(project =>
+        project.id === projectId ? { ...project, status: newStatus } : project
+      )
+    );
+  } catch (err) {
+    console.error('Update status error:', err);
+  }
+};
+
+
 
   const handleAddTaskRow = (projectId) => {
     setTasksByProject((prev) => ({

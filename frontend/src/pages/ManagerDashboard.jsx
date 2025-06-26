@@ -10,8 +10,11 @@ const ManagerDashboard = () => {
   const projectsPerPage = 5;
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+  fetchProjects();
+  const interval = setInterval(fetchProjects, 30000); // every 30s
+  return () => clearInterval(interval);
+}, []);
+
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -45,6 +48,15 @@ const ManagerDashboard = () => {
   const handlePageChange = (pageNum) => {
     setCurrentPage(pageNum);
   };
+  const getStatusColor = (status) => {
+  switch (status) {
+    case 'TODO': return 'secondary';
+    case 'IN_PROGRESS': return 'info';
+    case 'DONE': return 'success';
+    default: return 'dark';
+  }
+};
+
 
   return (
     <div className="d-flex">
@@ -64,7 +76,10 @@ const ManagerDashboard = () => {
                   <div key={project.id} className="col-12">
                     <div className="card p-3 shadow-sm">
                       <h5>{project.name}</h5>
-                      <p>Status: <strong>{project.status}</strong></p>
+                      <p>
+  Status: <span className={`badge bg-${getStatusColor(project.status)}`}>{project.status.replace('_', ' ')}</span>
+</p>
+
                       <div className="table-responsive">
                         <table className="table table-bordered">
                           <thead className="table-dark">

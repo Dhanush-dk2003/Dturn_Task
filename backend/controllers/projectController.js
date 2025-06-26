@@ -59,26 +59,24 @@ export const getProjectById = async (req, res) => {
   }
 };
 
-// ✅ Update project name
+// ✅ Update project status
 export const updateProject = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { status } = req.body;
 
   try {
-    const updated = await prisma.project.update({
+    const updatedProject = await prisma.project.update({
       where: { id: parseInt(id) },
-      data: { name }
+      data: { status },
     });
 
-    res.status(200).json({ message: 'Project updated', project: updated });
-  } catch (err) {
-    console.error(err);
-    if (err.code === 'P2025') {
-      return res.status(404).json({ message: 'Project not found' });
-    }
-    res.status(500).json({ message: 'Something went wrong' });
+    res.status(200).json(updatedProject);
+  } catch (error) {
+    console.error('Project update error:', error);
+    res.status(500).json({ message: 'Failed to update project' });
   }
 };
+
 
 // ✅ Delete project
 export const deleteProject = async (req, res) => {
