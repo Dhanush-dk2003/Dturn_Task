@@ -18,10 +18,10 @@ const Register = () => {
       isValid = false;
     }
     const emailRegex = /^[a-zA-Z0-9._%+-]{3,}@[a-zA-Z0-9.-]+\.(com|in|org|io)$/;
-if (!emailRegex.test(formData.email)) {
-  val.email = 'Enter a valid email with a proper domain (e.g., .com, .in)';
-  isValid = false;
-}
+    if (!emailRegex.test(formData.email)) {
+      val.email = "Enter a valid email with a proper domain (e.g., .com, .in)";
+      isValid = false;
+    }
 
     if (formData.password.length < 6) {
       val.password = 'Password must be at least 6 characters';
