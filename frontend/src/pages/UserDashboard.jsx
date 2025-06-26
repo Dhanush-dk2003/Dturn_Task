@@ -3,8 +3,11 @@ import Sidebar from './Sidebar';
 import API from '../axios';
 import { AuthContext } from '../contexts/AuthContext';
 
+
+
 const UserDashboard = () => {
   const { user } = useContext(AuthContext);
+
   const [tasksByProject, setTasksByProject] = useState({});
   const [loading, setLoading] = useState(false);
 

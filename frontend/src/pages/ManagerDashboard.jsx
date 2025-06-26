@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useContext } from 'react';
+
 import Sidebar from './Sidebar';
 import API from '../axios';
+import { AuthContext } from '../contexts/AuthContext';
+
+
 
 const ManagerDashboard = () => {
+  const { user } = useContext(AuthContext);
+
   const [projects, setProjects] = useState([]);
   const [tasksByProject, setTasksByProject] = useState({});
   const [loading, setLoading] = useState(false);
@@ -38,7 +44,6 @@ const ManagerDashboard = () => {
       setLoading(false);
     }
   };
-
   const filteredProjects = projects; // add filter if needed
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
   const indexOfLastProject = currentPage * projectsPerPage;
@@ -64,7 +69,8 @@ const ManagerDashboard = () => {
       <div className="flex-shrink-0 d-none d-md-block" style={{ width: '200px' }}></div>
       <div className="flex-grow-1" style={{ marginLeft: '200px' }}>
         <div className="container-fluid p-3">
-          <h2 className="mb-4">Manager's Dashboard</h2>
+          <h2 className="mb-4">{user?.name || 'Manager'}'s Dashboard</h2>
+
           {loading ? (
             <div className="text-center">
               <div className="spinner-border text-primary"></div>

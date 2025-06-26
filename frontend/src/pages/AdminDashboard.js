@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import API from '../axios';
+import { useContext } from 'react';
+import { AuthContext } from '../contexts/AuthContext';
+
+
 
 const AdminDashboard = () => {
+  const { user } = useContext(AuthContext);
+
   const [projects, setProjects] = useState([]);
   const [newProject, setNewProject] = useState('');
   const [tasksByProject, setTasksByProject] = useState({});
@@ -10,7 +16,6 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 5;
-
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -142,7 +147,7 @@ const AdminDashboard = () => {
       <div className="flex-grow-1" style={{ marginLeft: '250px', padding: '20px' }}>
         <div className="container-fluid">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
-            <h2 className="mb-0">Admin's Dashboard</h2>
+            <h2 className="mb-4">{user?.name || 'Admin'}'s Dashboard</h2>
             <div className="d-flex flex-column flex-md-row gap-2 w-50 w-md-50">
               <input
                 type="text"
