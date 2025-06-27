@@ -8,6 +8,7 @@ import { protect } from './middleware/authMiddleware.js';
 import { isAdmin } from './middleware/roleMiddleware.js';
 import projectRoutes from './routes/projectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import apiLimiter from './middleware/rateLimiter.js';
 
 
 
@@ -25,6 +26,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes); // 👈 mount routes
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/auth/login', apiLimiter);
 
 app.get('/', (req, res) => {
   res.send('API is running');

@@ -90,9 +90,9 @@ const UserDashboard = () => {
       <Sidebar />
       <div
         className="flex-grow-1"
-        style={{ marginLeft: "250px", padding: "20px" }}
+        style={{ marginLeft: "260px",marginRight: "50px", padding: "20px" }}
       >
-        <h4 className="fw-bold mb-4">{user?.name || "User"}'s Dashboard</h4>
+        <h1 className="fw mb-4">{user?.name || "User"}'s Dashboard</h1>
 
         {/* Filters */}
         <div className="d-flex justify-content-end mb-3">
@@ -146,15 +146,15 @@ const UserDashboard = () => {
                   key={projectId}
                   className="card p-3 mb-4 shadow-sm rounded-4"
                 >
-                  <h5 className="fw-semibold mb-3">{data.projectName}</h5>
-                  <div className="table-responsive">
+                  <h3 className="fw mb-3">{data.projectName}</h3>
+                  <div className="table-responsive mt-4">
                     <table className="table table-bordered text-center align-middle">
                       <thead className="table-dark text-white">
                         <tr>
-                          <th>S.No</th>
-                          <th>Task</th>
-                          <th>Status</th>
-                          <th>Submit</th>
+                          <th style={{ width: "80px" }}>S.No</th>
+                          <th style={{ width: "220px" }}>Task</th>
+                          <th style={{ width: "200px" }}>Status</th>
+                          <th style={{ width: "100px" }}>Submit</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -162,23 +162,23 @@ const UserDashboard = () => {
                           <tr key={task.id}>
                             <td>{index + 1}</td>
                             <td>{task.title}</td>
-                            <td>
-                              <select
-                                className="form-select"
-                                value={task.updatedStatus}
-                                onChange={(e) =>
-                                  handleStatusChangeLocal(
-                                    projectId,
-                                    index,
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="TODO">TODO</option>
-                                <option value="IN_PROGRESS">IN_PROGRESS</option>
-                                <option value="DONE">Completed</option>
-                              </select>
-                            </td>
+                            <td className="text-center align-middle">
+  <div className="d-flex justify-content-center">
+    <select
+      className="form-select text-center"
+      value={task.updatedStatus}
+      style={{ maxWidth: "150px" }}
+      onChange={(e) =>
+        handleStatusChangeLocal(projectId, index, e.target.value)
+      }
+    >
+      <option value="TODO">TODO</option>
+      <option value="IN_PROGRESS">IN_PROGRESS</option>
+      <option value="DONE">Completed</option>
+    </select>
+  </div>
+</td>
+
                             <td>
                               <button
                                 className="btn btn-sm btn-primary"

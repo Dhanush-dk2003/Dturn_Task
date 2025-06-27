@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useContext } from "react";
-
 import Sidebar from "./Sidebar";
 import API from "../axios";
 import { AuthContext } from "../contexts/AuthContext";
@@ -11,13 +10,13 @@ const ManagerDashboard = () => {
   const [tasksByProject, setTasksByProject] = useState({});
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const projectsPerPage = 3;
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const projectsPerPage = 3;
 
   useEffect(() => {
     fetchProjects();
-    const interval = setInterval(fetchProjects, 30000); // every 30s
+    const interval = setInterval(fetchProjects, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
 
@@ -25,10 +24,13 @@ const ManagerDashboard = () => {
     setLoading(true);
     try {
       const res = await API.get("/projects");
-      setProjects(res.data);
+
+      // 🔐 Ensure static project order (by ID)
+      const sortedProjects = res.data.sort((a, b) => a.id - b.id);
+      setProjects(sortedProjects);
 
       const taskMap = {};
-      for (const project of res.data) {
+      for (const project of sortedProjects) {
         try {
           const taskRes = await API.get(`/tasks?projectId=${project.id}`);
           taskMap[project.id] = taskRes.data;
@@ -43,9 +45,10 @@ const ManagerDashboard = () => {
       setLoading(false);
     }
   };
+
   const filteredProjects = projects.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ); // add filter if needed
+  );
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
@@ -54,9 +57,8 @@ const ManagerDashboard = () => {
     indexOfLastProject
   );
 
-  const handlePageChange = (pageNum) => {
-    setCurrentPage(pageNum);
-  };
+  const handlePageChange = (pageNum) => setCurrentPage(pageNum);
+
   const getStatusColor = (status) => {
     switch (status) {
       case "TODO":
@@ -74,15 +76,12 @@ const ManagerDashboard = () => {
     <div className="d-flex">
       <Sidebar />
       <div
-        className="flex-shrink-0 d-none d-md-block"
-        style={{ width: "200px" }}
-      ></div>
-      <div
         className="flex-grow-1 d-flex flex-column min-vh-100"
-        style={{ marginLeft: "80px", marginRight: "50px" }}
+        style={{ marginLeft: "270px", marginRight: "50px" }}
       >
         <div className="container-fluid p-3">
-          <h2 className="mb-4">{user?.name || "Manager"}'s Dashboard</h2>
+          <h1 className="mb-4">{user?.name || "Manager"}'s Dashboard</h1>
+
           <div className="d-flex justify-content-end mb-3">
             <div className="d-flex flex-column flex-md-row gap-2">
               <input
@@ -117,18 +116,23 @@ const ManagerDashboard = () => {
                 {currentProjects.map((project) => (
                   <div key={project.id} className="col-12">
                     <div className="card p-3 shadow-sm">
-                      <h5>{project.name}</h5>
-                      <p>
-                        Status:{" "}
-                        <span
-                          className={`badge bg-${getStatusColor(
-                            project.status
-                          )}`}
-                        >
-                          {project.status.replace("_", " ")}
-                        </span>
-                      </p>
+                     <div className="d-flex justify-content-between align-items-center mb-2">
+  <h3 className="mb-5">{project.name}</h3>
+  <p className="mb-0">
+    <span style={{ fontSize: "18px", fontWeight: "bold", color: "#555",marginRight: "5px" }}>
+    Status:
+  </span>
+    <span
+      className={`badge bg-${getStatusColor(project.status)}`}
+      style={{ fontSize: "0.95rem" }}
+    >
+      {project.status.replace("_", " ")}
+    </span>
+  </p>
+</div>
 
+
+                      
                       <div className="table-responsive">
                         <table className="table table-bordered text-center">
                           <thead className="table-dark">
@@ -160,11 +164,9 @@ const ManagerDashboard = () => {
                   </div>
                 ))}
               </div>
+
               {totalPages > 1 && (
-                <div
-                  className="d-flex justify-content-center mt-4"
-                  style={{ marginTop: "auto" }}
-                >
+                <div className="d-flex justify-content-center mt-4">
                   <nav>
                     <ul className="pagination">
                       {Array.from({ length: totalPages }, (_, i) => (
