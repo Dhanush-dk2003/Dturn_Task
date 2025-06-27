@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useMediaQuery } from 'react-responsive';
 import logo from '../assets/Dturn_logo.png';
 import icon from '../assets/is-greater-than.png';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
@@ -8,6 +9,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 const Sidebar = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const isSmallScreen = useMediaQuery({ maxWidth: 999 }); // 👈 screen < 1000px
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
@@ -18,59 +20,70 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Hamburger menu for small screens */}
-      <button
-        className="btn btn-light d-md-none position-absolute top-0 start-0 m-2 z-1030 shadow"
-        type="button"
-        data-bs-toggle="offcanvas"
-        data-bs-target="#sidebarOffcanvas"
-        aria-controls="sidebarOffcanvas"
-        aria-label="Toggle Sidebar"
-      >
-        ☰
-      </button>
+      {/* Hamburger toggle only if small screen */}
+      {isSmallScreen && (
+        <button
+          className="btn btn-light position-absolute top-0 start-0 m-2 z-1030 shadow"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#sidebarOffcanvas"
+          aria-controls="sidebarOffcanvas"
+        >
+          ☰
+        </button>
+      )}
 
-      {/* Static Sidebar for md+ screens */}
-      <div className="d-none d-md-flex flex-column p-3 position-fixed" 
-     style={{ 
-       width: '240px', 
-       height: '100vh', 
-       backgroundColor: '#dddedf',
-       top: 0,
-       left: 0
-     }}>
-  <SidebarContent handleLogout={handleLogout} user={user} />
-</div>
-
-
-      {/* Offcanvas Sidebar for mobile */}
-      <div
-        className="offcanvas offcanvas-start d-md-none"
-        tabIndex="-1"
-        id="sidebarOffcanvas"
-        aria-labelledby="sidebarOffcanvasLabel"
-        style={{ width: '220px' }}
-      >
-        <div className="offcanvas-header">
-          <h5 className="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
-          <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close" />
+      {/* Static Sidebar for large screen */}
+      {!isSmallScreen && (
+        <div
+          className="d-flex flex-column p-3 position-fixed"
+          style={{
+            width: '240px',
+            height: '100vh',
+            backgroundColor: '#dddedf',
+            top: 0,
+            left: 0,
+          }}
+        >
+          <SidebarContent handleLogout={handleLogout} user={user} />
         </div>
-        <div className="offcanvas-body p-0">
-          <SidebarContent user={user} handleLogout={handleLogout} />
+      )}
+
+      {/* Offcanvas for mobile */}
+      {isSmallScreen && (
+        <div
+          className="offcanvas offcanvas-start"
+          tabIndex="-1"
+          id="sidebarOffcanvas"
+          aria-labelledby="sidebarOffcanvasLabel"
+          style={{ width: '220px' }}
+        >
+          <div className="offcanvas-header">
+            <h5 className="offcanvas-title" id="sidebarOffcanvasLabel">
+              Menu
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              data-bs-dismiss="offcanvas"
+              aria-label="Close"
+            />
+          </div>
+          <div className="offcanvas-body p-0">
+            <SidebarContent handleLogout={handleLogout} user={user} />
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
 
 const SidebarContent = ({ user, handleLogout }) => (
   <div className="d-flex flex-column h-100 px-3 pt-3">
-    {/* Logo */}
     <div className="text-center mb-4">
       <img src={logo} alt="Logo" className="img-fluid" style={{ maxHeight: '50px' }} />
     </div>
 
-    {/* Role Label */}
     <div className="flex-grow-1 text-center mt-5">
       <ul className="nav flex-column w-100 mt-5">
         {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
@@ -86,7 +99,6 @@ const SidebarContent = ({ user, handleLogout }) => (
       </ul>
     </div>
 
-    {/* Logout Button */}
     <div className="text-center mt-auto pb-3">
       <button
         className="btn btn-outline-danger d-flex align-items-center justify-content-center w-100"
