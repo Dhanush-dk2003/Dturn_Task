@@ -66,3 +66,13 @@ Invalid `prisma.task.findUnique()` invocation:
 }
 
 Argument `id` is missing. {"clientVersion":"6.10.1","name":"PrismaClientValidationError","stack":"PrismaClientValidationError: \nInvalid `prisma.task.findUnique()` invocation:\n\n{\n  where: {\n+   id: Int\n  }\n}\n\nArgument `id` is missing.\n    at kn (D:\\Dturn\\TASK\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at Zn.handleRequestError (D:\\Dturn\\TASK\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7102)\n    at Zn.handleAndLogRequestError (D:\\Dturn\\TASK\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6784)\n    at Zn.request (D:\\Dturn\\TASK\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6491)\n    at async l (D:\\Dturn\\TASK\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9778)\n    at async deleteTask (file:///D:/Dturn/TASK/backend/controllers/taskController.js:54:18)","timestamp":"2025-06-26T05:55:27.220Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:18:45.907Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:19:16.356Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:19:46.351Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:20:15.920Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:20:46.352Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:21:16.358Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:21:22.586Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:21:22.594Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:21:44.654Z"}
+warn: Unauthorized project access by kumardhanush730@gmail.com {"timestamp":"2025-06-26T10:21:44.664Z"}

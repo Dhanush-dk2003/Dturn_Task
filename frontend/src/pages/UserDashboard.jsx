@@ -9,6 +9,8 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 3;
 
   useEffect(() => {
     fetchTasks();
@@ -52,11 +54,36 @@ const UserDashboard = () => {
   const handleSubmitTask = async (taskId, newStatus) => {
     try {
       await API.put(`/tasks/${taskId}`, { status: newStatus });
-      fetchTasks();
+
+      // Update the status locally without changing task order
+      setTasksByProject((prev) => {
+        const updated = { ...prev };
+        for (const projectId in updated) {
+          const taskIndex = updated[projectId].tasks.findIndex(
+            (t) => t.id === taskId
+          );
+          if (taskIndex !== -1) {
+            updated[projectId].tasks[taskIndex].status = newStatus;
+            updated[projectId].tasks[taskIndex].updatedStatus = newStatus;
+            break;
+          }
+        }
+        return updated;
+      });
     } catch (err) {
       console.error("Error updating task status:", err);
     }
   };
+
+  // Filter project entries by project name
+  const filteredEntries = Object.entries(tasksByProject).filter(([_, data]) =>
+    data.projectName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredEntries.length / projectsPerPage);
+  const indexOfLast = currentPage * projectsPerPage;
+  const indexOfFirst = indexOfLast - projectsPerPage;
+  const currentProjects = filteredEntries.slice(indexOfFirst, indexOfLast);
 
   return (
     <div className="d-flex">
@@ -98,80 +125,102 @@ const UserDashboard = () => {
             <div className="spinner-border text-primary" role="status"></div>
           </div>
         ) : (
-          Object.entries(tasksByProject).map(([projectId, data]) => {
-            // Apply task-level filtering
-            const filteredTasks = data.tasks.filter((task) => {
-              const matchesStatus =
-                !statusFilter || task.updatedStatus === statusFilter;
-              const matchesSearch =
-                !searchTerm ||
-                data.projectName
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase()) ||
-                task.title.toLowerCase().includes(searchTerm.toLowerCase());
+          <>
+            {currentProjects.map(([projectId, data]) => {
+              const filteredTasks = data.tasks.filter((task) => {
+                const matchesStatus =
+                  !statusFilter || task.updatedStatus === statusFilter;
+                const matchesSearch =
+                  !searchTerm ||
+                  data.projectName
+                    .toLowerCase()
+                    .includes(searchTerm.toLowerCase()) ||
+                  task.title.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchesStatus && matchesSearch;
+              });
 
-              return matchesStatus && matchesSearch;
-            });
+              if (filteredTasks.length === 0) return null;
 
-            // Skip project if no task matches after filtering
-            if (filteredTasks.length === 0) return null;
-
-            return (
-              <div
-                key={projectId}
-                className="card p-3 mb-4 shadow-sm rounded-4"
-              >
-                <h5 className="fw-semibold mb-3">{data.projectName}</h5>
-                <div className="table-responsive">
-                  <table className="table table-bordered text-center align-middle text-center">
-                    <thead className="table-dark text-white">
-                      <tr>
-                        <th>S.No</th>
-                        <th>Task</th>
-                        <th>Status</th>
-                        <th>Submit</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTasks.map((task, index) => (
-                        <tr key={task.id}>
-                          <td>{index + 1}</td>
-                          <td>{task.title}</td>
-                          <td>
-                            <select
-                              className="form-select"
-                              value={task.updatedStatus}
-                              onChange={(e) =>
-                                handleStatusChangeLocal(
-                                  projectId,
-                                  index,
-                                  e.target.value
-                                )
-                              }
-                            >
-                              <option value="TODO">TODO</option>
-                              <option value="IN_PROGRESS">IN_PROGRESS</option>
-                              <option value="DONE">Completed</option>
-                            </select>
-                          </td>
-                          <td>
-                            <button
-                              className="btn btn-sm btn-primary"
-                              onClick={() =>
-                                handleSubmitTask(task.id, task.updatedStatus)
-                              }
-                            >
-                              Submit
-                            </button>
-                          </td>
+              return (
+                <div
+                  key={projectId}
+                  className="card p-3 mb-4 shadow-sm rounded-4"
+                >
+                  <h5 className="fw-semibold mb-3">{data.projectName}</h5>
+                  <div className="table-responsive">
+                    <table className="table table-bordered text-center align-middle">
+                      <thead className="table-dark text-white">
+                        <tr>
+                          <th>S.No</th>
+                          <th>Task</th>
+                          <th>Status</th>
+                          <th>Submit</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {filteredTasks.map((task, index) => (
+                          <tr key={task.id}>
+                            <td>{index + 1}</td>
+                            <td>{task.title}</td>
+                            <td>
+                              <select
+                                className="form-select"
+                                value={task.updatedStatus}
+                                onChange={(e) =>
+                                  handleStatusChangeLocal(
+                                    projectId,
+                                    index,
+                                    e.target.value
+                                  )
+                                }
+                              >
+                                <option value="TODO">TODO</option>
+                                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                <option value="DONE">Completed</option>
+                              </select>
+                            </td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-primary"
+                                onClick={() =>
+                                  handleSubmitTask(task.id, task.updatedStatus)
+                                }
+                              >
+                                Submit
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              );
+            })}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="d-flex justify-content-center mt-4">
+                <ul className="pagination">
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <li
+                      key={i}
+                      className={`page-item ${
+                        currentPage === i + 1 ? "active" : ""
+                      }`}
+                    >
+                      <button
+                        className="page-link"
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            );
-          })
+            )}
+          </>
         )}
       </div>
     </div>

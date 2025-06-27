@@ -12,7 +12,7 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const projectsPerPage = 5;
+  const projectsPerPage = 3;
 
   useEffect(() => {
     fetchProjects();
@@ -25,7 +25,7 @@ const AdminDashboard = () => {
   const fetchProjects = async () => {
     try {
       const res = await API.get("/projects");
-      setProjects(res.data);
+      setProjects(res.data.sort((a, b) => a.id - b.id));
       const taskMap = {};
       for (const project of res.data) {
         try {
@@ -327,25 +327,27 @@ const AdminDashboard = () => {
                 ))}
               </div>
 
-              <div className="d-flex justify-content-center mt-4">
-                <ul className="pagination">
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <li
-                      key={i}
-                      className={`page-item ${
-                        currentPage === i + 1 ? "active" : ""
-                      }`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => handlePageChange(i + 1)}
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-4">
+                  <ul className="pagination">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <li
+                        key={i}
+                        className={`page-item ${
+                          currentPage === i + 1 ? "active" : ""
+                        }`}
                       >
-                        {i + 1}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                        <button
+                          className="page-link"
+                          onClick={() => handlePageChange(i + 1)}
+                        >
+                          {i + 1}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </>
           )}
         </div>
