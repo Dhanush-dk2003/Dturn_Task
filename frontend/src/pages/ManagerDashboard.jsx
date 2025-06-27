@@ -2,21 +2,23 @@ import React, { useEffect, useState, useContext } from "react";
 import Sidebar from "./Sidebar";
 import API from "../axios";
 import { AuthContext } from "../contexts/AuthContext";
+import { useMediaQuery } from 'react-responsive';
+
 
 const ManagerDashboard = () => {
   const { user } = useContext(AuthContext);
-
   const [projects, setProjects] = useState([]);
   const [tasksByProject, setTasksByProject] = useState({});
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 3;
+  const isLargeScreen = useMediaQuery({ minWidth: 992 });
 
   useEffect(() => {
     fetchProjects();
-    const interval = setInterval(fetchProjects, 30000); // Refresh every 30s
+    const interval = setInterval(fetchProjects, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -24,19 +26,13 @@ const ManagerDashboard = () => {
     setLoading(true);
     try {
       const res = await API.get("/projects");
-
-      // 🔐 Ensure static project order (by ID)
-      const sortedProjects = res.data.sort((a, b) => a.id - b.id);
-      setProjects(sortedProjects);
+      const sorted = res.data.sort((a, b) => a.id - b.id);
+      setProjects(sorted);
 
       const taskMap = {};
-      for (const project of sortedProjects) {
-        try {
-          const taskRes = await API.get(`/tasks?projectId=${project.id}`);
-          taskMap[project.id] = taskRes.data;
-        } catch {
-          taskMap[project.id] = [];
-        }
+      for (const project of sorted) {
+        const tasksRes = await API.get(`/tasks?projectId=${project.id}`);
+        taskMap[project.id] = tasksRes.data;
       }
       setTasksByProject(taskMap);
     } catch (err) {
@@ -50,65 +46,61 @@ const ManagerDashboard = () => {
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
-  const indexOfLastProject = currentPage * projectsPerPage;
-  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
   const currentProjects = filteredProjects.slice(
-    indexOfFirstProject,
-    indexOfLastProject
+    (currentPage - 1) * projectsPerPage,
+    currentPage * projectsPerPage
   );
 
-  const handlePageChange = (pageNum) => setCurrentPage(pageNum);
+  const handlePageChange = (num) => setCurrentPage(num);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "TODO":
-        return "secondary";
-      case "IN_PROGRESS":
-        return "info";
-      case "DONE":
-        return "success";
-      default:
-        return "dark";
-    }
+  const getStatusBadge = (status) => {
+    const color =
+      status === "TODO" ? "secondary" :
+      status === "IN_PROGRESS" ? "info" :
+      status === "DONE" ? "success" : "dark";
+    return <span className={`badge bg-${color}`}>{status.replace("_", " ")}</span>;
   };
 
   return (
-    <div className="d-flex">
+    <div className="d-flex flex-column flex-md-row">
       <Sidebar />
       <div
-        className="flex-grow-1 d-flex flex-column min-vh-100"
-        style={{ marginLeft: "270px", marginRight: "50px" }}
-      >
-        <div className="container-fluid p-3">
-          <h1 className="mb-4">{user?.name || "Manager"}'s Dashboard</h1>
+  className="flex-grow-1 px-3 py-4"
+  style={{
+    marginLeft: isLargeScreen ? '250px' : '0',
+    marginRight: isLargeScreen ? '50px' : '0',
+  }}
+>
+        <div className="container-fluid">
+          <h1 className="mb-4 mt-4">{user?.name || "Manager"}'s Dashboard</h1>
 
-          <div className="d-flex justify-content-end mb-3">
-            <div className="d-flex flex-column flex-md-row gap-2">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ maxWidth: "200px" }}
-              />
-              <select
-                className="form-select"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ maxWidth: "150px" }}
-              >
-                <option value="">All Tasks</option>
-                <option value="TODO">TODO</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="DONE">Completed</option>
-              </select>
-            </div>
+          {/* Filters */}
+          <div className="d-flex flex-column flex-md-row justify-content-end gap-2 mb-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search projects"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ maxWidth: "200px" }}
+            />
+            <select
+              className="form-select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ maxWidth: "180px" }}
+            >
+              <option value="">All Tasks</option>
+              <option value="TODO">TODO</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="DONE">Done</option>
+            </select>
           </div>
 
+          {/* Project Cards */}
           {loading ? (
-            <div className="text-center">
-              <div className="spinner-border text-primary"></div>
+            <div className="text-center my-5">
+              <div className="spinner-border text-primary" role="status" />
             </div>
           ) : (
             <>
@@ -116,28 +108,18 @@ const ManagerDashboard = () => {
                 {currentProjects.map((project) => (
                   <div key={project.id} className="col-12">
                     <div className="card p-3 shadow-sm">
-                     <div className="d-flex justify-content-between align-items-center mb-2">
-  <h3 className="mb-5">{project.name}</h3>
-  <p className="mb-0">
-    <span style={{ fontSize: "18px", fontWeight: "bold", color: "#555",marginRight: "5px" }}>
-    Status:
-  </span>
-    <span
-      className={`badge bg-${getStatusColor(project.status)}`}
-      style={{ fontSize: "0.95rem" }}
-    >
-      {project.status.replace("_", " ")}
-    </span>
-  </p>
-</div>
+                      <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+                        <h4 className="mb-0">{project.name}</h4>
+                        <div>
+                          <strong>Status:</strong> {getStatusBadge(project.status)}
+                        </div>
+                      </div>
 
-
-                      
                       <div className="table-responsive">
                         <table className="table table-bordered text-center">
                           <thead className="table-dark">
                             <tr>
-                              <th>S.No</th>
+                              <th>#</th>
                               <th>Task</th>
                               <th>Assigned To</th>
                               <th>Status</th>
@@ -145,16 +127,15 @@ const ManagerDashboard = () => {
                           </thead>
                           <tbody>
                             {(tasksByProject[project.id] || [])
-                              .filter(
-                                (task) =>
-                                  !statusFilter || task.status === statusFilter
+                              .filter((task) =>
+                                !statusFilter || task.status === statusFilter
                               )
                               .map((task, i) => (
                                 <tr key={task.id}>
                                   <td>{i + 1}</td>
                                   <td>{task.title}</td>
                                   <td>{task.user?.email || "Unassigned"}</td>
-                                  <td>{task.status}</td>
+                                  <td>{getStatusBadge(task.status)}</td>
                                 </tr>
                               ))}
                           </tbody>
@@ -165,27 +146,26 @@ const ManagerDashboard = () => {
                 ))}
               </div>
 
+              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center mt-4">
-                  <nav>
-                    <ul className="pagination">
-                      {Array.from({ length: totalPages }, (_, i) => (
-                        <li
-                          key={i}
-                          className={`page-item ${
-                            currentPage === i + 1 ? "active" : ""
-                          }`}
+                  <ul className="pagination">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <li
+                        key={i}
+                        className={`page-item ${
+                          currentPage === i + 1 ? "active" : ""
+                        }`}
+                      >
+                        <button
+                          className="page-link"
+                          onClick={() => handlePageChange(i + 1)}
                         >
-                          <button
-                            className="page-link"
-                            onClick={() => handlePageChange(i + 1)}
-                          >
-                            {i + 1}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </nav>
+                          {i + 1}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </>

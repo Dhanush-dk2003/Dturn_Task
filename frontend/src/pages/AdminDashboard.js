@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import Sidebar from "./Sidebar";
 import API from "../axios";
 import { AuthContext } from "../contexts/AuthContext";
+import { useMediaQuery } from 'react-responsive';
 
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -14,7 +15,7 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showInputBox, setShowInputBox] = useState(false);
   const projectsPerPage = 3;
-
+  const isLargeScreen = useMediaQuery({ minWidth: 992 });
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -47,9 +48,7 @@ const AdminDashboard = () => {
       await API.post("/projects", { name: newProject });
       setNewProject("");
       await fetchProjects();
-      setTimeout(() => {
-        setShowInputBox(false);
-      }, 1000); // Hide input after 1 second
+      setTimeout(() => setShowInputBox(false), 1000);
     } catch (err) {
       console.error("Add project error:", err);
     } finally {
@@ -155,18 +154,22 @@ const AdminDashboard = () => {
     indexOfLastProject
   );
 
-  const handlePageChange = (pageNum) => setCurrentPage(pageNum);
+  // const handlePageChange = (pageNum) => setCurrentPage(pageNum);
 
   return (
-    <div className="d-flex">
+    <div className="d-flex flex-column flex-md-row" >
       <Sidebar />
       <div
-        className="flex-grow-1"
-        style={{ marginLeft: "250px", padding: "20px" }}
-      >
+  className="flex-grow-1 px-3 py-4"
+  style={{
+    marginLeft: isLargeScreen ? '250px' : '0',
+    marginRight: isLargeScreen ? '50px' : '0',
+  }}
+>
+
         <div className="container-fluid">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h1>{user?.name || "Admin"}'s Dashboard</h1>
+          <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
+            <h1 className="mb-4  mt-4">{user?.name || "Admin"}'s Dashboard</h1>
             {!showInputBox && (
               <button
                 className="btn btn-primary"
@@ -178,8 +181,8 @@ const AdminDashboard = () => {
           </div>
 
           {showInputBox && (
-            <div className="d-flex justify-content-end mb-3">
-              <div className="d-flex gap-2" style={{ maxWidth: "500px" }}>
+            <div className="row justify-content-end mb-3">
+              <div className="col-md-6 d-flex gap-2">
                 <input
                   type="text"
                   className="form-control"
@@ -189,91 +192,63 @@ const AdminDashboard = () => {
                   onKeyDown={handleKeyPress}
                   autoFocus
                 />
-                <button
-                  className="btn btn-success"
-                  onClick={handleCreateProject}
-                >
-                  Add
-                </button>
-                <button
-                  className="btn btn-outline-secondary"
-                  onClick={() => setShowInputBox(false)}
-                >
-                  Cancel
-                </button>
+                <button className="btn btn-success" onClick={handleCreateProject}>Add</button>
+                <button className="btn btn-outline-secondary" onClick={() => setShowInputBox(false)}>Cancel</button>
               </div>
             </div>
           )}
 
-          <div className="d-flex justify-content-end mb-3">
-            <input
-              type="text"
-              className="form-control me-2"
-              placeholder="Search..."
-              style={{ maxWidth: "200px" }}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <select
-              className="form-select"
-              style={{ maxWidth: "150px" }}
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All Tasks</option>
-              <option value="TODO">TODO</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="DONE">Completed</option>
-            </select>
+          <div className="row mb-3 justify-content-end">
+            <div className="col-md-6 d-flex gap-2">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <select
+                className="form-select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">All Tasks</option>
+                <option value="TODO">TODO</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="DONE">Completed</option>
+              </select>
+            </div>
           </div>
 
           {loading ? (
             <div className="text-center my-5">
-              <div className="spinner-border text-primary" />
+              <div className="spinner-border text-primary" role="status"></div>
             </div>
           ) : (
             <>
               <div className="row g-3">
                 {currentProjects.map((project) => (
                   <div key={project.id} className="col-12">
-                    <div className="card p-3 shadow-sm position-relative">
-                      <div className="d-flex justify-content-between align-items-start mb-1">
-  <h3 style={{ marginBottom: "0px" }}>{project.name}</h3>
-
-                        <button
-                          className="btn btn-outline-danger btn-sm position-absolute"
-                          style={{ top: "10px", right: "10px", zIndex: 1 }}
-                          onClick={() => handleDeleteProject(project.id)}
-                        >
-                          ✕
-                        </button>
-                        <div className="d-flex align-items-center gap-2 mt-5">
-  <span style={{ fontSize: "18px", fontWeight: "bold", color: "#555" ,marginTop: "8px"}}>
-    Status:
-  </span>
-  <select
-  className="form-select"
-  value={project.status}
-  onChange={(e) => handleProjectStatusChange(project.id, e.target.value)}
-  style={{
-    color:
-      project.status === "DONE"
-        ? "green"
-        : project.status === "IN_PROGRESS"
-        ? "#e67e22"
-        : "red",
-    fontWeight: "600",
-    width: "140px",
-    marginTop: "6px",
-  }}
->
-  <option value="TODO" style={{ color: "red" }}>Todo</option>
-  <option value="IN_PROGRESS" style={{ color: "#e67e22" }}>In_Progress</option>
-  <option value="DONE" style={{ color: "green" }}>Done</option>
-</select>
-
-</div>
-
+                    <div className="card shadow-sm p-3">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <h5 className="mb-0">{project.name}</h5>
+                        <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2">
+                          <select
+                            className="form-select"
+                            value={project.status}
+                            onChange={(e) => handleProjectStatusChange(project.id, e.target.value)}
+                          >
+                            <option value="TODO">Todo</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="DONE">Done</option>
+                          </select>
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => handleDeleteProject(project.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
 
                       <div className="table-responsive">
@@ -289,27 +264,16 @@ const AdminDashboard = () => {
                           </thead>
                           <tbody>
                             {(tasksByProject[project.id] || [])
-                              .filter(
-                                (task) =>
-                                  !statusFilter || task.status === statusFilter
-                              )
+                              .filter((task) => !statusFilter || task.status === statusFilter)
                               .map((task, index) => (
                                 <tr key={task.id || index}>
                                   <td>{index + 1}</td>
                                   <td>
                                     {task.isNew ? (
                                       <input
-                                        type="text"
                                         className="form-control"
                                         value={task.title}
-                                        onChange={(e) =>
-                                          handleTaskChange(
-                                            project.id,
-                                            index,
-                                            "title",
-                                            e.target.value
-                                          )
-                                        }
+                                        onChange={(e) => handleTaskChange(project.id, index, 'title', e.target.value)}
                                       />
                                     ) : (
                                       task.title
@@ -318,22 +282,12 @@ const AdminDashboard = () => {
                                   <td>
                                     {task.isNew ? (
                                       <input
-                                        type="email"
                                         className="form-control"
                                         value={task.userEmail}
-                                        onChange={(e) =>
-                                          handleTaskChange(
-                                            project.id,
-                                            index,
-                                            "userEmail",
-                                            e.target.value
-                                          )
-                                        }
+                                        onChange={(e) => handleTaskChange(project.id, index, 'userEmail', e.target.value)}
                                       />
                                     ) : (
-                                      task.user?.email ||
-                                      task.userEmail ||
-                                      "Unassigned"
+                                      task.user?.email || task.userEmail || 'Unassigned'
                                     )}
                                   </td>
                                   <td>{task.status}</td>
@@ -341,9 +295,7 @@ const AdminDashboard = () => {
                                     {!task.isNew && (
                                       <button
                                         className="btn btn-sm btn-outline-danger"
-                                        onClick={() =>
-                                          handleDeleteTask(task.id)
-                                        }
+                                        onClick={() => handleDeleteTask(task.id)}
                                       >
                                         Delete
                                       </button>
@@ -356,16 +308,10 @@ const AdminDashboard = () => {
                       </div>
 
                       <div className="d-flex justify-content-between mt-3">
-                        <button
-                          className="btn btn-outline-secondary"
-                          onClick={() => handleAddTaskRow(project.id)}
-                        >
+                        <button className="btn btn-outline-secondary" onClick={() => handleAddTaskRow(project.id)}>
                           + Task
                         </button>
-                        <button
-                          className="btn btn-outline-success"
-                          onClick={() => handleAssignTasks(project.id)}
-                        >
+                        <button className="btn btn-outline-success" onClick={() => handleAssignTasks(project.id)}>
                           Assign
                         </button>
                       </div>
@@ -380,14 +326,9 @@ const AdminDashboard = () => {
                     {Array.from({ length: totalPages }, (_, i) => (
                       <li
                         key={i}
-                        className={`page-item ${
-                          currentPage === i + 1 ? "active" : ""
-                        }`}
+                        className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
                       >
-                        <button
-                          className="page-link"
-                          onClick={() => handlePageChange(i + 1)}
-                        >
+                        <button className="page-link" onClick={() => setCurrentPage(i + 1)}>
                           {i + 1}
                         </button>
                       </li>

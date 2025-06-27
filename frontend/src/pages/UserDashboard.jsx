@@ -2,6 +2,8 @@ import React, { useEffect, useState, useContext } from "react";
 import Sidebar from "./Sidebar";
 import API from "../axios";
 import { AuthContext } from "../contexts/AuthContext";
+import { useMediaQuery } from 'react-responsive';
+
 
 const UserDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -11,6 +13,7 @@ const UserDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 3;
+  const isLargeScreen = useMediaQuery({ minWidth: 992 });
 
   useEffect(() => {
     fetchTasks();
@@ -26,15 +29,9 @@ const UserDashboard = () => {
         const projectId = task.project?.id;
         const projectName = task.project?.name || "Unknown Project";
         if (!grouped[projectId]) {
-          grouped[projectId] = {
-            projectName,
-            tasks: [],
-          };
+          grouped[projectId] = { projectName, tasks: [] };
         }
-        grouped[projectId].tasks.push({
-          ...task,
-          updatedStatus: task.status,
-        });
+        grouped[projectId].tasks.push({ ...task, updatedStatus: task.status });
       });
 
       setTasksByProject(grouped);
@@ -54,18 +51,13 @@ const UserDashboard = () => {
   const handleSubmitTask = async (taskId, newStatus) => {
     try {
       await API.put(`/tasks/${taskId}`, { status: newStatus });
-
-      // Update the status locally without changing task order
       setTasksByProject((prev) => {
         const updated = { ...prev };
-        for (const projectId in updated) {
-          const taskIndex = updated[projectId].tasks.findIndex(
-            (t) => t.id === taskId
-          );
-          if (taskIndex !== -1) {
-            updated[projectId].tasks[taskIndex].status = newStatus;
-            updated[projectId].tasks[taskIndex].updatedStatus = newStatus;
-            break;
+        for (const pid in updated) {
+          const idx = updated[pid].tasks.findIndex((t) => t.id === taskId);
+          if (idx !== -1) {
+            updated[pid].tasks[idx].status = newStatus;
+            updated[pid].tasks[idx].updatedStatus = newStatus;
           }
         }
         return updated;
@@ -75,7 +67,6 @@ const UserDashboard = () => {
     }
   };
 
-  // Filter project entries by project name
   const filteredEntries = Object.entries(tasksByProject).filter(([_, data]) =>
     data.projectName.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -88,15 +79,18 @@ const UserDashboard = () => {
   return (
     <div className="d-flex">
       <Sidebar />
-      <div
-        className="flex-grow-1"
-        style={{ marginLeft: "260px",marginRight: "50px", padding: "20px" }}
-      >
-        <h1 className="fw mb-4">{user?.name || "User"}'s Dashboard</h1>
+     <div
+  className="flex-grow-1 px-3 py-4"
+  style={{
+    marginLeft: isLargeScreen ? '250px' : '0',
+    marginRight: isLargeScreen ? '50px' : '0',
+  }}
+>
+        <div className="container-fluid">
+          <h1 className="mb-4 mt-4">{user?.name || "User"}'s Dashboard</h1>
 
-        {/* Filters */}
-        <div className="d-flex justify-content-end mb-3">
-          <div className="d-flex flex-column flex-md-row gap-2">
+          {/* Filters */}
+          <div className="d-flex flex-column flex-md-row justify-content-end gap-2 mb-3">
             <input
               type="text"
               className="form-control"
@@ -117,111 +111,102 @@ const UserDashboard = () => {
               <option value="DONE">Completed</option>
             </select>
           </div>
-        </div>
 
-        {/* Loader */}
-        {loading ? (
-          <div className="text-center">
-            <div className="spinner-border text-primary" role="status"></div>
-          </div>
-        ) : (
-          <>
-            {currentProjects.map(([projectId, data]) => {
-              const filteredTasks = data.tasks.filter((task) => {
-                const matchesStatus =
-                  !statusFilter || task.updatedStatus === statusFilter;
-                const matchesSearch =
-                  !searchTerm ||
-                  data.projectName
-                    .toLowerCase()
-                    .includes(searchTerm.toLowerCase()) ||
-                  task.title.toLowerCase().includes(searchTerm.toLowerCase());
-                return matchesStatus && matchesSearch;
-              });
+          {/* Task Cards */}
+          {loading ? (
+            <div className="text-center my-5">
+              <div className="spinner-border text-primary" role="status" />
+            </div>
+          ) : (
+            <>
+              {currentProjects.map(([projectId, data]) => {
+                const filteredTasks = data.tasks.filter((task) => {
+                  const matchesStatus =
+                    !statusFilter || task.updatedStatus === statusFilter;
+                  const matchesSearch =
+                    !searchTerm ||
+                    task.title.toLowerCase().includes(searchTerm.toLowerCase());
+                  return matchesStatus && matchesSearch;
+                });
 
-              if (filteredTasks.length === 0) return null;
+                if (filteredTasks.length === 0) return null;
 
-              return (
-                <div
-                  key={projectId}
-                  className="card p-3 mb-4 shadow-sm rounded-4"
-                >
-                  <h3 className="fw mb-3">{data.projectName}</h3>
-                  <div className="table-responsive mt-4">
-                    <table className="table table-bordered text-center align-middle">
-                      <thead className="table-dark text-white">
-                        <tr>
-                          <th style={{ width: "80px" }}>S.No</th>
-                          <th style={{ width: "220px" }}>Task</th>
-                          <th style={{ width: "200px" }}>Status</th>
-                          <th style={{ width: "100px" }}>Submit</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredTasks.map((task, index) => (
-                          <tr key={task.id}>
-                            <td>{index + 1}</td>
-                            <td>{task.title}</td>
-                            <td className="text-center align-middle">
-  <div className="d-flex justify-content-center">
-    <select
-      className="form-select text-center"
-      value={task.updatedStatus}
-      style={{ maxWidth: "150px" }}
-      onChange={(e) =>
-        handleStatusChangeLocal(projectId, index, e.target.value)
-      }
-    >
-      <option value="TODO">TODO</option>
-      <option value="IN_PROGRESS">IN_PROGRESS</option>
-      <option value="DONE">Completed</option>
-    </select>
-  </div>
-</td>
-
-                            <td>
-                              <button
-                                className="btn btn-sm btn-primary"
-                                onClick={() =>
-                                  handleSubmitTask(task.id, task.updatedStatus)
-                                }
-                              >
-                                Submit
-                              </button>
-                            </td>
+                return (
+                  <div key={projectId} className="card p-3 mb-4 shadow-sm">
+                    <h4 className="mb-3">{data.projectName}</h4>
+                    <div className="table-responsive">
+                      <table className="table table-bordered text-center align-middle">
+                        <thead className="table-dark">
+                          <tr>
+                            <th>S.No</th>
+                            <th>Task</th>
+                            <th>Status</th>
+                            <th>Action</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {filteredTasks.map((task, i) => (
+                            <tr key={task.id}>
+                              <td>{i + 1}</td>
+                              <td>{task.title}</td>
+                              <td>
+                                <select
+                                  className="form-select"
+                                  style={{ maxWidth: "160px", margin: "auto" }}
+                                  value={task.updatedStatus}
+                                  onChange={(e) =>
+                                    handleStatusChangeLocal(projectId, i, e.target.value)
+                                  }
+                                >
+                                  <option value="TODO">TODO</option>
+                                  <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                  <option value="DONE">DONE</option>
+                                </select>
+                              </td>
+                              <td>
+                                <button
+                                  className="btn btn-sm btn-primary"
+                                  onClick={() =>
+                                    handleSubmitTask(task.id, task.updatedStatus)
+                                  }
+                                >
+                                  Submit
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="d-flex justify-content-center mt-4">
-                <ul className="pagination">
-                  {Array.from({ length: totalPages }, (_, i) => (
-                    <li
-                      key={i}
-                      className={`page-item ${
-                        currentPage === i + 1 ? "active" : ""
-                      }`}
-                    >
-                      <button
-                        className="page-link"
-                        onClick={() => setCurrentPage(i + 1)}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-4">
+                  <ul className="pagination">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <li
+                        key={i}
+                        className={`page-item ${
+                          currentPage === i + 1 ? "active" : ""
+                        }`}
                       >
-                        {i + 1}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </>
-        )}
+                        <button
+                          className="page-link"
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

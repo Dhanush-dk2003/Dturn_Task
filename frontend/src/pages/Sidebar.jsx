@@ -10,8 +10,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    const confirmLogout = window.confirm('Are you sure you want to logout?');
-    if (confirmLogout) {
+    if (window.confirm('Are you sure you want to logout?')) {
       logout();
       navigate('/login');
     }
@@ -19,67 +18,81 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* ☰ Hamburger toggle for small screens */}
+      {/* Hamburger menu for small screens */}
       <button
-        className="btn btn-light d-md-none position-fixed top-0 start-0 m-2 z-1030"
+        className="btn btn-light d-md-none position-absolute top-0 start-0 m-2 z-1030 shadow"
         type="button"
         data-bs-toggle="offcanvas"
         data-bs-target="#sidebarOffcanvas"
         aria-controls="sidebarOffcanvas"
+        aria-label="Toggle Sidebar"
       >
         ☰
       </button>
 
-      {/* Sidebar for medium and up (visible always) */}
-      <div className="d-none d-md-flex flex-column p-3  position-fixed h-100" style={{ width: '240px',backgroundColor:'#dddedf' }}>
-        <SidebarContent handleLogout={handleLogout} user={user} />
-      </div>
+      {/* Static Sidebar for md+ screens */}
+      <div className="d-none d-md-flex flex-column p-3 position-fixed" 
+     style={{ 
+       width: '240px', 
+       height: '100vh', 
+       backgroundColor: '#dddedf',
+       top: 0,
+       left: 0
+     }}>
+  <SidebarContent handleLogout={handleLogout} user={user} />
+</div>
 
-      {/* Offcanvas Sidebar for small screens */}
+
+      {/* Offcanvas Sidebar for mobile */}
       <div
         className="offcanvas offcanvas-start d-md-none"
         tabIndex="-1"
         id="sidebarOffcanvas"
-        aria-labelledby="sidebarOffcanvasLabel" style={{ width: '150px' }}
+        aria-labelledby="sidebarOffcanvasLabel"
+        style={{ width: '220px' }}
       >
+        <div className="offcanvas-header">
+          <h5 className="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+          <button type="button" className="btn-close" data-bs-dismiss="offcanvas" aria-label="Close" />
+        </div>
         <div className="offcanvas-body p-0">
-          <SidebarContent handleLogout={handleLogout} user={user} />
+          <SidebarContent user={user} handleLogout={handleLogout} />
         </div>
       </div>
     </>
   );
 };
 
-const SidebarContent = ({ handleLogout, user }) => (
-  <div className="d-flex flex-column h-100 p-3">
+const SidebarContent = ({ user, handleLogout }) => (
+  <div className="d-flex flex-column h-100 px-3 pt-3">
     {/* Logo */}
     <div className="text-center mb-4">
-      <img src={logo} alt="Logo" className="img-fluid" style={{ maxHeight: '60px' }} />
+      <img src={logo} alt="Logo" className="img-fluid" style={{ maxHeight: '50px' }} />
     </div>
 
-    {/* Role-based label */}
-    <div className="my-auto text-center">
-      <ul className="nav nav-pills flex-column w-100">
+    {/* Role Label */}
+    <div className="flex-grow-1 text-center mt-5">
+      <ul className="nav flex-column w-100 mt-5">
         {(user?.role === 'ADMIN' || user?.role === 'MANAGER') && (
           <li className="nav-item mb-3">
-            <span className="nav-link active bg-dark text-white">Projects</span>
+            <span className="nav-link active bg-dark text-white rounded mt-5">Projects</span>
           </li>
         )}
         {user?.role === 'USER' && (
           <li className="nav-item mb-3">
-            <span className="nav-link active bg-dark text-white">Tasks</span>
+            <span className="nav-link active bg-dark text-white rounded mt-5">Tasks</span>
           </li>
         )}
       </ul>
     </div>
 
-    {/* Logout button */}
-    <div className="mt-auto text-center">
+    {/* Logout Button */}
+    <div className="text-center mt-auto pb-3">
       <button
+        className="btn btn-outline-danger d-flex align-items-center justify-content-center w-100"
         onClick={handleLogout}
-        className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center"
       >
-        Logout <img src={icon} alt="Logout Icon" className="ms-2" style={{ width: '16px'}} />
+        Logout <img src={icon} alt="Logout Icon" className="ms-2" style={{ width: '16px' }} />
       </button>
     </div>
   </div>
