@@ -12,14 +12,11 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showInputBox, setShowInputBox] = useState(false);
   const projectsPerPage = 3;
 
   useEffect(() => {
     fetchProjects();
-    const modal = document.getElementById("addProjectModal");
-    if (modal) {
-      modal.addEventListener("show.bs.modal", () => setNewProject(""));
-    }
   }, []);
 
   const fetchProjects = async () => {
@@ -50,10 +47,19 @@ const AdminDashboard = () => {
       await API.post("/projects", { name: newProject });
       setNewProject("");
       await fetchProjects();
+      setTimeout(() => {
+        setShowInputBox(false);
+      }, 1000); // Hide input after 1 second
     } catch (err) {
       console.error("Add project error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleCreateProject();
     }
   };
 
@@ -160,16 +166,44 @@ const AdminDashboard = () => {
       >
         <div className="container-fluid">
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h2>{user?.name || "Admin"}'s Dashboard</h2>
-            <button
-              className="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#addProjectModal"
-              data-bs-dismiss="modal"
-            >
-              + Add Project
-            </button>
+            <h1>{user?.name || "Admin"}'s Dashboard</h1>
+            {!showInputBox && (
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowInputBox(true)}
+              >
+                + Add Project
+              </button>
+            )}
           </div>
+
+          {showInputBox && (
+            <div className="d-flex justify-content-end mb-3">
+              <div className="d-flex gap-2" style={{ maxWidth: "500px" }}>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Project name"
+                  value={newProject}
+                  onChange={(e) => setNewProject(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  autoFocus
+                />
+                <button
+                  className="btn btn-success"
+                  onClick={handleCreateProject}
+                >
+                  Add
+                </button>
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => setShowInputBox(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="d-flex justify-content-end mb-3">
             <input
@@ -202,31 +236,44 @@ const AdminDashboard = () => {
               <div className="row g-3">
                 {currentProjects.map((project) => (
                   <div key={project.id} className="col-12">
-                    <div className="card p-3 shadow-sm">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <h5>{project.name}</h5>
-                        <div className="d-flex gap-2">
-                          <select
-                            className="form-select"
-                            value={project.status}
-                            onChange={(e) =>
-                              handleProjectStatusChange(
-                                project.id,
-                                e.target.value
-                              )
-                            }
-                          >
-                            <option value="TODO">Todo</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="DONE">Done</option>
-                          </select>
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => handleDeleteProject(project.id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                    <div className="card p-3 shadow-sm position-relative">
+                      <div className="d-flex justify-content-between align-items-start mb-1">
+  <h3 style={{ marginBottom: "0px" }}>{project.name}</h3>
+
+                        <button
+                          className="btn btn-outline-danger btn-sm position-absolute"
+                          style={{ top: "10px", right: "10px", zIndex: 1 }}
+                          onClick={() => handleDeleteProject(project.id)}
+                        >
+                          ✕
+                        </button>
+                        <div className="d-flex align-items-center gap-2 mt-5">
+  <span style={{ fontSize: "18px", fontWeight: "bold", color: "#555" ,marginTop: "8px"}}>
+    Status:
+  </span>
+  <select
+  className="form-select"
+  value={project.status}
+  onChange={(e) => handleProjectStatusChange(project.id, e.target.value)}
+  style={{
+    color:
+      project.status === "DONE"
+        ? "green"
+        : project.status === "IN_PROGRESS"
+        ? "#e67e22"
+        : "red",
+    fontWeight: "600",
+    width: "140px",
+    marginTop: "6px",
+  }}
+>
+  <option value="TODO" style={{ color: "red" }}>Todo</option>
+  <option value="IN_PROGRESS" style={{ color: "#e67e22" }}>In_Progress</option>
+  <option value="DONE" style={{ color: "green" }}>Done</option>
+</select>
+
+</div>
+
                       </div>
 
                       <div className="table-responsive">
@@ -350,47 +397,6 @@ const AdminDashboard = () => {
               )}
             </>
           )}
-        </div>
-
-        {/* Add Project Modal */}
-        <div
-          className="modal fade"
-          id="addProjectModal"
-          tabIndex="-1"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Add New Project</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                />
-              </div>
-              <div className="modal-body">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Project name"
-                  value={newProject}
-                  onChange={(e) => setNewProject(e.target.value)}
-                />
-              </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" data-bs-dismiss="modal">
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleCreateProject}
-                >
-                  Add Project
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
