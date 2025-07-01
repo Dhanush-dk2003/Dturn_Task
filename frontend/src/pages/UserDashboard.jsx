@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar";
 import API from "../axios";
 import { AuthContext } from "../contexts/AuthContext";
 import { useMediaQuery } from 'react-responsive';
+import Snackbar from "../components/Snackbar"; // Assuming you have a Snackbar component
 
 
 const UserDashboard = () => {
@@ -14,6 +15,10 @@ const UserDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 3;
   const isLargeScreen = useMediaQuery({ minWidth: 992 });
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+const [showSnackbar, setShowSnackbar] = useState(false);
+
+
 
   useEffect(() => {
     fetchTasks();
@@ -49,23 +54,26 @@ const UserDashboard = () => {
   };
 
   const handleSubmitTask = async (taskId, newStatus) => {
-    try {
-      await API.put(`/tasks/${taskId}`, { status: newStatus });
-      setTasksByProject((prev) => {
-        const updated = { ...prev };
-        for (const pid in updated) {
-          const idx = updated[pid].tasks.findIndex((t) => t.id === taskId);
-          if (idx !== -1) {
-            updated[pid].tasks[idx].status = newStatus;
-            updated[pid].tasks[idx].updatedStatus = newStatus;
-          }
+  try {
+    await API.put(`/tasks/${taskId}`, { status: newStatus });
+    setTasksByProject((prev) => {
+      const updated = { ...prev };
+      for (const pid in updated) {
+        const idx = updated[pid].tasks.findIndex((t) => t.id === taskId);
+        if (idx !== -1) {
+          updated[pid].tasks[idx].status = newStatus;
+          updated[pid].tasks[idx].updatedStatus = newStatus;
         }
-        return updated;
-      });
-    } catch (err) {
-      console.error("Error updating task status:", err);
-    }
-  };
+      }
+      return updated;
+    });
+    setSnackbarMessage("Task status updated successfully!");
+    setShowSnackbar(true);
+  } catch (err) {
+    console.error("Error updating task status:", err);
+  }
+};
+
 
   const filteredEntries = Object.entries(tasksByProject).filter(([_, data]) =>
     data.projectName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -206,6 +214,12 @@ const UserDashboard = () => {
               )}
             </>
           )}
+          <Snackbar
+  message={snackbarMessage}
+  show={showSnackbar}
+  onClose={() => setShowSnackbar(false)}
+/>
+
         </div>
       </div>
     </div>
