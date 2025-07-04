@@ -18,7 +18,7 @@ const ManagerDashboard = () => {
 
   useEffect(() => {
     fetchProjects();
-    const interval = setInterval(fetchProjects, 10000);
+    const interval = setInterval(fetchProjects, 100000);
     return () => clearInterval(interval);
   }, []);
 
